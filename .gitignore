@@ -1,0 +1,6 @@
+.ipynb_checkpoints
+rest_api_env
+*.ipynb
+
+.vscode
+*.code-workspace
