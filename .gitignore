@@ -1,6 +1,9 @@
 .ipynb_checkpoints
 rest_api_env
 *.ipynb
+*.py[cod]
 
 .vscode
 *.code-workspace
+
+*.db
