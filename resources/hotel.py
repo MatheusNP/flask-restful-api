@@ -1,5 +1,6 @@
 from flask_restful import Resource, reqparse
 from models.hotel import HotelModel
+from flask_jwt_extended import jwt_required
 
 class Hotels(Resource):
     def get(self):
@@ -20,6 +21,7 @@ class Hotel(Resource):
         return {'success': False, 'message': 'Hotel not found'}, 404
 
 
+    @jwt_required()
     def post(self, id):
         if HotelModel.find(id):
             return {'success': False, 'data': 'Hotel already exists'}, 409
@@ -34,6 +36,7 @@ class Hotel(Resource):
             return {'success': False, 'message': 'An internal error ocurred trying to save hotel'}, 500
 
 
+    @jwt_required()
     def put(self, id):
         data = Hotel.form.parse_args()
 
@@ -54,6 +57,7 @@ class Hotel(Resource):
             return {'success': False, 'message': 'An internal error ocurred trying to save hotel'}, 500
 
 
+    @jwt_required()
     def delete(self, id):
         hotel = HotelModel.find(id)
         if hotel:
