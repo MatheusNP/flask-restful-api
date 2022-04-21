@@ -1,37 +1,8 @@
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse
 from models.hotel import HotelModel
+from resources.helpers.filters import normalize_path_params, sql_wout_city, sql_with_city
 import sqlite3
-
-def normalize_path_params(
-    city = None,
-    grade_min = 0,
-    grade_max = 5,
-    daily_min = 0,
-    daily_max = 10000,
-    limit = 50,
-    offset = 0,
-    **data
-):
-    if city:
-        return {
-            'grade_min': grade_min,
-            'grade_max': grade_max,
-            'daily_min': daily_min,
-            'daily_max': daily_max,
-            'city': city,
-            'limit': limit,
-            'offset': offset
-        }
-    return {
-        'grade_min': grade_min,
-        'grade_max': grade_max,
-        'daily_min': daily_min,
-        'daily_max': daily_max,
-        'limit': limit,
-        'offset': offset
-    }
-
 
 path_params = reqparse.RequestParser()
 path_params.add_argument('city', type=str)
@@ -51,18 +22,10 @@ class Hotels(Resource):
         data_valid = {key: data[key] for key in data if data[key] is not None}
         params = normalize_path_params(**data_valid)
 
-        if not params.get('city'):
-            sql = " SELECT * FROM hotels \
-                    WHERE grade BETWEEN ? AND ? \
-                    AND daily BETWEEN ? AND ? \
-                    LIMIT ? OFFSET ?"
-        else:
-            sql = " SELECT * FROM hotels \
-                    WHERE grade BETWEEN ? AND ? \
-                    AND daily BETWEEN ? AND ? \
-                    AND city = ? \
-                    LIMIT ? OFFSET ?"
-        
+        sql = sql_wout_city
+        if params.get('city'):
+            sql = sql_with_city
+
         params_tupla = tuple([params[key] for key in params])
         result = cursor.execute(sql, params_tupla)
 
