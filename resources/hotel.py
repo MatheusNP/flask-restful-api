@@ -1,10 +1,82 @@
+from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse
 from models.hotel import HotelModel
-from flask_jwt_extended import jwt_required
+import sqlite3
+
+def normalize_path_params(
+    city = None,
+    grade_min = 0,
+    grade_max = 5,
+    daily_min = 0,
+    daily_max = 10000,
+    limit = 50,
+    offset = 0,
+    **data
+):
+    if city:
+        return {
+            'grade_min': grade_min,
+            'grade_max': grade_max,
+            'daily_min': daily_min,
+            'daily_max': daily_max,
+            'city': city,
+            'limit': limit,
+            'offset': offset
+        }
+    return {
+        'grade_min': grade_min,
+        'grade_max': grade_max,
+        'daily_min': daily_min,
+        'daily_max': daily_max,
+        'limit': limit,
+        'offset': offset
+    }
+
+
+path_params = reqparse.RequestParser()
+path_params.add_argument('city', type=str)
+path_params.add_argument('grade_min', type=float)
+path_params.add_argument('grade_max', type=float)
+path_params.add_argument('daily_min', type=float)
+path_params.add_argument('daily_max', type=float)
+path_params.add_argument('limit', type=int)
+path_params.add_argument('offset', type=int)
 
 class Hotels(Resource):
     def get(self):
-        return {'success': True, 'data': [hotel.json() for hotel in HotelModel.query.all()]}
+        connection = sqlite3.connect('pyvago.db')
+        cursor = connection.cursor()
+
+        data = path_params.parse_args()
+        data_valid = {key: data[key] for key in data if data[key] is not None}
+        params = normalize_path_params(**data_valid)
+
+        if not params.get('city'):
+            sql = " SELECT * FROM hotels \
+                    WHERE grade BETWEEN ? AND ? \
+                    AND daily BETWEEN ? AND ? \
+                    LIMIT ? OFFSET ?"
+        else:
+            sql = " SELECT * FROM hotels \
+                    WHERE grade BETWEEN ? AND ? \
+                    AND daily BETWEEN ? AND ? \
+                    AND city = ? \
+                    LIMIT ? OFFSET ?"
+        
+        params_tupla = tuple([params[key] for key in params])
+        result = cursor.execute(sql, params_tupla)
+
+        hotels = []
+        for row in result:
+            hotels.append({
+                'id': row[0],
+                'name': row[1],
+                'grade': row[2],
+                'daily': row[3],
+                'city': row[4]
+            })
+
+        return {'success': True, 'data': hotels}
 
 class Hotel(Resource):
     form = reqparse.RequestParser()
