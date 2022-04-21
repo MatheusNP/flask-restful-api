@@ -1,3 +1,4 @@
+from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse
 from models.site import SiteModel
 
@@ -10,6 +11,7 @@ class Sites(Resource):
         return {'success': True, 'data': [site.json() for site in SiteModel.query.all()]}
 
 
+    @jwt_required()
     def post(self):
         data = form.parse_args()
 
@@ -31,6 +33,7 @@ class Site(Resource):
         return {'success': False, 'message': "Site not found"}, 404
 
 
+    @jwt_required()
     def delete(self, id):
         site = SiteModel.find(id)
         if site:
