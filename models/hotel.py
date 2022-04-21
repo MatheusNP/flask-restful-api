@@ -7,14 +7,16 @@ class HotelModel(database.Model):
     grade = database.Column(database.Float(precision = 1))
     daily = database.Column(database.Float(precision = 2))
     city = database.Column(database.String(40))
+    site_id = database.Column(database.Integer, database.ForeignKey('sites.id'))
 
 
-    def __init__(self, id, name, grade, daily, city):
+    def __init__(self, id, name, grade, daily, city, site_id):
         self.id = id
         self.name = name
         self.grade = grade
         self.daily = daily
         self.city = city
+        self.site_id = site_id
 
 
     def json(self):
@@ -23,7 +25,8 @@ class HotelModel(database.Model):
             'name': self.name,
             'grade': self.grade,
             'daily': self.daily,
-            'city': self.city
+            'city': self.city,
+            'site_id': self.site_id
         }
 
 
@@ -41,11 +44,12 @@ class HotelModel(database.Model):
         database.session.commit()
 
 
-    def update(self, name, grade, daily, city):
+    def update(self, name, grade, daily, city, site_id):
         self.name = name
         self.grade = grade
         self.daily = daily
         self.city = city
+        self.site_id = site_id
 
 
     def delete(self):

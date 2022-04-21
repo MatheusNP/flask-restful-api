@@ -38,8 +38,11 @@ class UserRegister(Resource):
             return {'success': False, 'message': "Login '{}' already exists".format(data['login'])}, 404
         
         user = UserModel(**data)
-        user.save()
-        return {'success': True, 'data': user.json()}, 201
+        try:
+            user.save()
+            return {'success': True, 'data': user.json()}, 201
+        except:
+            return {'success': False, 'message': "An internal error ocurred trying to create a new user"}, 500
 
 # /login
 class UserLogin(Resource):

@@ -1,6 +1,7 @@
 from flask_jwt_extended import jwt_required
 from flask_restful import Resource, reqparse
 from models.hotel import HotelModel
+from models.site import SiteModel
 from resources.helpers.filters import normalize_path_params, sql_wout_city, sql_with_city
 import sqlite3
 
@@ -36,7 +37,8 @@ class Hotels(Resource):
                 'name': row[1],
                 'grade': row[2],
                 'daily': row[3],
-                'city': row[4]
+                'city': row[4],
+                'site_id': row[5],
             })
 
         return {'success': True, 'data': hotels}
@@ -47,6 +49,7 @@ class Hotel(Resource):
     form.add_argument('grade', type=float, required=True, help="Field 'grade' is required.")
     form.add_argument('daily', type=float, required=True, help="Field 'daily' is required.")
     form.add_argument('city', type=str, required=True, help="Field 'city' is required.")
+    form.add_argument('site_id', type=int, required=True, help="Field 'site_id' is required.")
 
 
     def get(self, id):
@@ -62,6 +65,10 @@ class Hotel(Resource):
             return {'success': False, 'data': 'Hotel already exists'}, 409
 
         data = Hotel.form.parse_args()
+
+        if not SiteModel.find(data['site_id']):
+            return {'success': False, 'data': 'Site not exists'}, 409
+
         hotel = HotelModel(id, **data)
 
         try:
@@ -74,6 +81,9 @@ class Hotel(Resource):
     @jwt_required()
     def put(self, id):
         data = Hotel.form.parse_args()
+
+        if not SiteModel.find(data['site_id']):
+            return {'success': False, 'data': 'Site not exists'}, 409
 
         hotel = HotelModel.find(id)
         if hotel:
