@@ -21,7 +21,7 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def index():
-    return "<h1>Bem vindo ao PyVago!</h1>"
+    return "<h1>Bem vindo ao PyVago!!</h1>"
 
 @app.before_first_request
 def connect():
