@@ -6,13 +6,12 @@ from resources.user import User, UserRegister, UserLogin, UserLogout
 from flask_jwt_extended import JWTManager
 from blacklist import BLACKLIST
 from sql_alchemy import database
+from settings import CONFIG
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///pyvago.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['JWT_SECRET_KEY'] = "eyJhbGciOiJIUzI1NiJ9.eyJSb2xlIjoiQWRtaW4iLCJJc3N1ZXIiOiJJc3N1ZXIiLCJVc2VybmFtZSI6IkphdmFJblVzZSIsImV4cCI6MTY1MDU1Mjk1NywiaWF0IjoxNjUwNTUyOTU3fQ.OBL4_3RCM-zICx7BSTl1uiQtah_hMEUYYwZjiFKNQ6M"
-app.config['JWT_BLACKLIST_ENABLED'] = True
+for key, value in CONFIG.items():
+    app.config[key] = value
 
 database.init_app(app)
 
@@ -21,7 +20,7 @@ jwt = JWTManager(app)
 
 @app.route('/')
 def index():
-    return "<h1>Bem vindo ao PyVago!!</h1>"
+    return "<h1>Bem vindo ao PyVago!</h1>"
 
 @app.before_first_request
 def connect():
@@ -35,9 +34,13 @@ def verify_blacklist(self, token):
 def revoked_token(jwt_header, jwt_payload):
     return jsonify({'success': False, 'message': "You have been logged out"}), 401
 
+@jwt.expired_token_loader
+def expired_token(jwt_header, jwt_payload):
+    return jsonify({'success': False, 'message': "Your token has expired"}), 401
+
 api.add_resource(Hotels, '/hotels')
-api.add_resource(Hotel, '/hotels/<string:id>')
-api.add_resource(User, '/users/<int:id>')
+api.add_resource(Hotel, '/hotels/<int:id>')
+api.add_resource(User, '/user')
 api.add_resource(UserRegister, '/register')
 api.add_resource(UserLogin, '/login')
 api.add_resource(UserLogout, '/logout')

@@ -5,6 +5,14 @@ from models.site import SiteModel
 from resources.helpers.filters import normalize_path_params, sql_wout_city, sql_with_city
 import sqlite3
 
+
+form = reqparse.RequestParser()
+form.add_argument('name', type=str, required=True, help="Field 'name' is required.")
+form.add_argument('grade', type=float, required=True, help="Field 'grade' is required.")
+form.add_argument('daily', type=float, required=True, help="Field 'daily' is required.")
+form.add_argument('city', type=str, required=True, help="Field 'city' is required.")
+form.add_argument('site_id', type=int, required=True, help="Field 'site_id' is required.")
+
 path_params = reqparse.RequestParser()
 path_params.add_argument('city', type=str)
 path_params.add_argument('grade_min', type=float)
@@ -15,6 +23,7 @@ path_params.add_argument('limit', type=int)
 path_params.add_argument('offset', type=int)
 
 class Hotels(Resource):
+
     def get(self):
         connection = sqlite3.connect('pyvago.db')
         cursor = connection.cursor()
@@ -43,14 +52,26 @@ class Hotels(Resource):
 
         return {'success': True, 'data': hotels}
 
-class Hotel(Resource):
-    form = reqparse.RequestParser()
-    form.add_argument('name', type=str, required=True, help="Field 'name' is required.")
-    form.add_argument('grade', type=float, required=True, help="Field 'grade' is required.")
-    form.add_argument('daily', type=float, required=True, help="Field 'daily' is required.")
-    form.add_argument('city', type=str, required=True, help="Field 'city' is required.")
-    form.add_argument('site_id', type=int, required=True, help="Field 'site_id' is required.")
 
+    @jwt_required()
+    def post(self):
+        data = form.parse_args()
+
+        if HotelModel.findByName(data['name']):
+            return {'success': False, 'data': 'Hotel already exists'}, 409
+
+        if not SiteModel.find(data['site_id']):
+            return {'success': False, 'data': 'Site not exists'}, 409
+
+        hotel = HotelModel(**data)
+
+        try:
+            hotel.save()
+            return {'success': True, 'data': hotel.json()}, 201
+        except:
+            return {'success': False, 'message': 'An internal error ocurred trying to save hotel'}, 500
+
+class Hotel(Resource):
 
     def get(self, id):
         hotel = HotelModel.find(id)
@@ -60,27 +81,11 @@ class Hotel(Resource):
 
 
     @jwt_required()
-    def post(self, id):
-        if HotelModel.find(id):
-            return {'success': False, 'data': 'Hotel already exists'}, 409
-
-        data = Hotel.form.parse_args()
-
-        if not SiteModel.find(data['site_id']):
-            return {'success': False, 'data': 'Site not exists'}, 409
-
-        hotel = HotelModel(id, **data)
-
-        try:
-            hotel.save()
-            return {'success': True, 'data': hotel.json()}, 201
-        except:
-            return {'success': False, 'message': 'An internal error ocurred trying to save hotel'}, 500
-
-
-    @jwt_required()
     def put(self, id):
-        data = Hotel.form.parse_args()
+        data = form.parse_args()
+
+        if HotelModel.findByName(data['name']) and HotelModel.findByName(data['name']).id is not id:
+            return {'success': False, 'data': 'Hotel already exists'}, 409
 
         if not SiteModel.find(data['site_id']):
             return {'success': False, 'data': 'Site not exists'}, 409
