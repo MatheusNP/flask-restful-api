@@ -1,25 +1,26 @@
 from flask_restful import Resource, reqparse
 from models.user import UserModel
 from werkzeug.security import safe_str_cmp
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt, get_jwt_identity
 from blacklist import BLACKLIST
 
 form = reqparse.RequestParser()
 form.add_argument('login', type=str, required=True, help="Field 'login' is required")
 form.add_argument('password', type=str, required=True, help="Field 'password' is required")
 
-# /users/{id}
+# /user
 class User(Resource):
-    def get(self, id):
-        user = UserModel.find(id)
+    @jwt_required()
+    def get(self):
+        user = UserModel.find(get_jwt_identity())
         if user:
             return {'success': True, 'data': user.json()}
         return {'success': False, 'message': "User not found"}, 404
 
 
     @jwt_required()
-    def delete(self, id):
-        user = UserModel.find(id)
+    def delete(self):
+        user = UserModel.find(get_jwt_identity())
         if user:
             try:
                 user.delete()
