@@ -1,10 +1,12 @@
 from datetime import timedelta
 
+jwt_ttl_hours = 1
+
 CONFIG = {
     'SQLALCHEMY_DATABASE_URI': 'sqlite:///pyvago.db',
     'SQLALCHEMY_TRACK_MODIFICATIONS': False,
     'JWT_SECRET_KEY': "secret.key", # change this value on your code.
     'JWT_BLACKLIST_ENABLED': True,
-    'JWT_ACCESS_TOKEN_EXPIRES': timedelta(hours=1),
+    'JWT_ACCESS_TOKEN_EXPIRES': timedelta(hours=jwt_ttl_hours),
     'PROPAGATE_EXCEPTIONS': True
 }

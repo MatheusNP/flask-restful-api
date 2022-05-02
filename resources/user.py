@@ -4,6 +4,7 @@ from models.user import UserModel
 from werkzeug.security import safe_str_cmp
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt, get_jwt_identity
 from blacklist import jwt_redis_blacklist
+from settings import jwt_ttl_hours
 
 form = reqparse.RequestParser()
 form.add_argument('login', type=str, required=True, help="Field 'login' is required")
@@ -64,5 +65,5 @@ class UserLogout(Resource):
     @jwt_required()
     def post(self):
         jwt_id = get_jwt()['jti'] #JWT Token Indetifier
-        jwt_redis_blacklist.set(jwt_id, "", ex=timedelta(hours=1))
+        jwt_redis_blacklist.set(jwt_id, "", ex=timedelta(hours=jwt_ttl_hours))
         return {'success': True}, 200
