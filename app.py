@@ -4,7 +4,7 @@ from resources.hotel import Hotels, Hotel
 from resources.site import Sites, Site
 from resources.user import User, UserRegister, UserLogin, UserLogout
 from flask_jwt_extended import JWTManager
-from blacklist import BLACKLIST
+from blacklist import jwt_redis_blacklist
 from sql_alchemy import database
 from settings import CONFIG
 
@@ -27,8 +27,10 @@ def connect():
     database.create_all()
 
 @jwt.token_in_blocklist_loader
-def verify_blacklist(self, token):
-    return token['jti'] in BLACKLIST
+def verify_blacklist(jwt_header, jwt_payload):
+    jti_id = jwt_payload["jti"]
+    token_in_redis = jwt_redis_blacklist.get(jti_id)
+    return token_in_redis is not None
 
 @jwt.revoked_token_loader
 def revoked_token(jwt_header, jwt_payload):
