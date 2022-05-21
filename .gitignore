@@ -14,3 +14,5 @@ __pycache__/
 *.db
 settings.py
 newrelic.ini
+start.sh
+
